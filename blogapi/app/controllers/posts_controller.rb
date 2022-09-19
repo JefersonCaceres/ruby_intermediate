@@ -1,0 +1,43 @@
+class PostsController <ApplicationController
+
+    ##manejo de excepciones
+    ##usamos
+    rescue_from Exception do |e|
+         render json: {error: e.message}, status: :internal_error
+    end
+    rescue_from ActiveRecord::RecordInvalid do |e|
+        render json: {error: e.message}, status: :unprocessable_entity
+    end
+
+    #GET/post
+    def index
+        ## debemos traer solo los articulos publicados
+        @posts = Post.where(published: true)
+        ##para retornar usamos 
+        render json:@posts, status: :ok 
+    end
+    #GET /post/{id}
+    def show
+        ## debemos buscar el id
+        @post= Post.find(params[:id])
+        render json: @post, status: :ok
+    end
+    ## Metodo post /posts 
+    def create
+    @post = Post.create!(create_params)
+    render json: @post, status: :created
+    end
+    ## metodo put /posts/{id}
+    def update
+     @post= Post.find(params[:id])
+     @post.update!(update_params)
+     render json: @post, status: :ok
+    end
+    private
+    def create_params
+        params.require(:post).permit(:title, :content, :published,:user_id)
+    end
+    def update_params
+        params.require(:post).permit(:title, :content, :published)  
+    end
+end
