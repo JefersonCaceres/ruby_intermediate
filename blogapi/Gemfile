@@ -57,7 +57,12 @@ gem "shoulda-matchers"
   gem "database_cleaner"
 #faker nos ayuda a generar datos falsos
  gem "faker"
- 
+ # ActiveModelSerializer
+ ## control de como presentar la informacion en JSON
+ gem 'active_model_serializers'
+ ## generador para utilizar serializer
+ ## Terminal:  rails g serializer post
+ ## donde post es el nombre del modelo
   
  
 

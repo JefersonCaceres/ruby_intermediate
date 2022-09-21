@@ -6,14 +6,33 @@ RSpec.describe "Posts", type: :request do
     ##se prueba el GET al post
     describe "GET /posts" do
     ##generamos una peticion 
-    before {get '/posts'}
     it "should return OK" do
+        ##parametros que le agregamos a la url
+        get '/posts'
         payload =JSON.parse(response.body)
         ## en caso de que no haya un post en la bd
         expect(payload).to be_empty  
         ## esperamos que retorne un ok(200)
         expect(response).to have_http_status(200)
-        
+    
+    end
+    
+    describe "Search" do
+        let!(:hola_mundo) {create(:published_post, title: 'Hola mundo')}
+        let!(:hola_rails) {create(:published_post, title: 'Hola rails')}
+        let!(:curso_rails) {create(:published_post, title: 'curso rails')}
+    it "should filter posts by title" do
+    ##parametros que le agregamos a la url
+    get "/posts?search=Hola"
+    payload =JSON.parse(response.body)
+    ## esperamos que no este vacio
+    expect(payload).to_not be_empty
+    ##que el tamaño sea igual a 2
+    expect(payload.size).to eq(2)  
+    ##verificar si son los id que buscamos
+    expect(payload.map { |p| p["id"]}.sort).to eq([hola_mundo.id, hola_rails.id].sort)    ## esperamos que retorne un ok(200)
+    expect(response).to have_http_status(200)
+    end
     end
     end
     ##creamos otra prueba con la siguiente descripcion
@@ -54,7 +73,15 @@ RSpec.describe "Posts", type: :request do
             payload =JSON.parse(response.body)
             
             expect(payload).to_not be_empty
+            ##en las pruebas para hacer la serializacion
             expect(payload["id"]).to eq(post.id)
+            expect(payload["title"]).to eq(post.title)
+            expect(payload["content"]).to eq(post.content)
+            expect(payload["published"]).to eq(post.published)
+            expect(payload["author"]["name"]).to eq(post.user.name)
+            expect(payload["author"]["email"]).to eq(post.user.email)
+            expect(payload["author"]["id"]).to eq(post.user.id)
+            ###___________________________
             expect(response).to have_http_status(200)
     
      end
@@ -143,5 +170,3 @@ end
 ## guardamos con post= FactoryBot.build(:post)
 ## preguntamos si es valido con post.valid?
 ## tambien preguntamos los errores con post.errors
-##
-
