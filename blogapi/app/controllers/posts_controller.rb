@@ -1,4 +1,8 @@
 class PostsController <ApplicationController
+    ##el only nos dice que debe ser ejecutado antes de un create, update
+    ##
+    include Secured
+    before_action :authenticate_user!, only: [:create, :update]
 
     ##manejo de excepciones
     ##usamos
@@ -8,6 +12,11 @@ class PostsController <ApplicationController
     rescue_from Exception do |e|
          render json: {error: e.message}, status: :internal_error
     end
+    
+    rescue_from ActiveRecord::RecordNotFound do |e|
+        render json: {error: e.message}, status: :not_found
+    end
+    
     rescue_from ActiveRecord::RecordInvalid do |e|
         render json: {error: e.message}, status: :unprocessable_entity
     end
@@ -31,28 +40,34 @@ class PostsController <ApplicationController
     def show
         ## debemos buscar el id
         @post= Post.find(params[:id])
+        if (@post.published?|| (Current.user && @post.user_id == Curen.user.id))
         render json: @post, status: :ok
+        else
+            render json: {error: 'Not Found'}, status: :not_found
+        end
     end
     ## Metodo post /posts 
     def create
-    @post = Post.create!(create_params)
+    @post = Current.user.posts.create!(create_params)
     render json: @post, status: :created
     end
     ## metodo put /posts/{id}
     def update
-     @post= Post.find(params[:id])
+     @post= Current.user.posts.find(params[:id])
      @post.update!(update_params)
      render json: @post, status: :ok
     end
+    
     private
+
     def create_params
-        params.require(:post).permit(:title, :content, :published,:user_id)
+        params.require(:post).permit(:title, :content, :published)
     end
     def update_params
         params.require(:post).permit(:title, :content, :published)  
     end
+    
 end
-
 ##DETECTAR N + 1 QUERY
 ### para detectar el problemas vamos a las pruebas rspec
 ### buscamos especificamente la prueba donde listamos 
